@@ -149,6 +149,7 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Icon1.ico" />
     <Content Include="timesDB.mdf">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

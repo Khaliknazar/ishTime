@@ -6,6 +6,7 @@
         xmlns:local="clr-namespace:ishTime"
         mc:Ignorable="d"
         Closing="Window_Closing"
+        Icon="Icon1.ico"
         Title="ish Time" Height="800" Width="450" ResizeMode="NoResize" Background="#5B0888" FontFamily="Segoe UI Black">
     <Grid>
         <TextBlock Name="timeText" FontSize="80" Height="100" Margin="0,200,0,0" TextAlignment="Center" Foreground="#E5CFF7">

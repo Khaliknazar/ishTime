@@ -23,9 +23,12 @@ namespace ishTime
     public partial class MainWindow : Window
     {
         bool isPlay;
+        private static Mutex _mutex = new Mutex(true, "{ishTime}");
+
         public MainWindow()
         {
             InitializeComponent();
+            OnStartup();
             timeText.Text = "00:00:00";
             UpdateTodayText();
         }
@@ -71,11 +74,13 @@ namespace ishTime
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
+     
             if (isPlay)
             {
                 StopTimer();
             }
-            
+            _mutex.ReleaseMutex();
+            _mutex.Dispose();
         }
 
         private void UpdateTodayText()
@@ -93,6 +98,18 @@ namespace ishTime
                 todayText.Text = $"Today: {Math.Round(todayStat.TotalSeconds)}s";
             }else { todayText.Text = "Today: ISHLA ESHAK"; }
             
+        }
+
+
+        protected void OnStartup()
+        {
+            if (!_mutex.WaitOne(TimeSpan.Zero, true))
+            {
+                // Another instance is already running
+                MessageBox.Show("Another instance of the application is already running.");
+                Application.Current.Shutdown();
+            }
+
         }
     }
 }
