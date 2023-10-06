@@ -105,7 +105,6 @@ namespace ishTime
         {
             if (!_mutex.WaitOne(TimeSpan.Zero, true))
             {
-                // Another instance is already running
                 MessageBox.Show("Another instance of the application is already running.");
                 Application.Current.Shutdown();
             }
