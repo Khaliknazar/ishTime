@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 using System.Configuration;
+using System.Windows;
+using System.Data.SQLite;
+using System.Runtime.Remoting.Contexts;
 
 namespace ishTime
 {
@@ -15,22 +13,44 @@ namespace ishTime
 
         public Models()
         {
+            connectionString = @"Data Source=C:\ishTime.db; Version=3;";
 
-            connectionString = @"Data Source=(LocalDB)\MSSQLLocalDB;AttachDbFilename=C:\Users\user\Desktop\global\C#\ishTime\ishTime\timesDB.mdf;Integrated Security=True";
+            if (!Properties.Settings.Default.isFirstRun) //CHNAGE BOOLEAN!!!!!!!!!!
+            {
+                if (!File.Exists(@"C:\ishTime.db"))
+                {
+                    SQLiteConnection.CreateFile(@"C:\ishTime.db");
+
+                    using (SQLiteConnection Connect = new SQLiteConnection(@"Data Source=C:\ishTime.db; Version=3;"))
+                    {
+                        string createTableSql = @"
+                        CREATE TABLE activity (
+                        Id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                        start_date DATETIME NULL,
+                        end_date DATETIME NULL DEFAULT 0
+                        );";
+                        SQLiteCommand Command = new SQLiteCommand(createTableSql, Connect);
+                        Connect.Open();
+                        Command.ExecuteNonQuery();
+                        Connect.Close();
+                    }
+
+                }             
+            }
+
         }
 
         void InsertData(DateTime data, string column)
         {
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
             {
-                connection.Open();
-
+                
                 string insertQuery = $"INSERT INTO activity ({column}) VALUES (@data)";
-                using (SqlCommand command = new SqlCommand(insertQuery, connection))
-                {
-                    command.Parameters.AddWithValue("@data", data);
-                    command.ExecuteNonQuery();
-                }
+                SQLiteCommand Command = new SQLiteCommand(insertQuery, connection);
+                Command.Parameters.AddWithValue("@data", data);
+                connection.Open();
+                Command.ExecuteNonQuery();
+                connection.Close();
             }
         }
         public void StartTimer()
@@ -63,14 +83,14 @@ namespace ishTime
         public DateTime GetDateTime()
         {
             DateTime result = new DateTime();
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
 
                 string sqlQuery = "SELECT start_date FROM activity WHERE id = (SELECT MAX(id) FROM activity)";
-                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                using (SQLiteCommand command = new SQLiteCommand(sqlQuery, connection))
                 {
-                    using (SqlDataReader reader = command.ExecuteReader())
+                    using (SQLiteDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -88,11 +108,11 @@ namespace ishTime
         {
             string updateSql = "UPDATE activity SET end_date = @Value1 WHERE ID = (SELECT MAX(id) FROM activity)";
 
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
 
-                using (SqlCommand command = new SqlCommand(updateSql, connection))
+                using (SQLiteCommand command = new SQLiteCommand(updateSql, connection))
                 {
                     command.Parameters.AddWithValue("@Value1", end_date);
 
@@ -105,14 +125,14 @@ namespace ishTime
         {
             double result = 0;
 
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString))
             {
                 connection.Open();
 
-                string sqlQuery = "SELECT * FROM activity WHERE CONVERT(date, start_date) = CONVERT(date, GETDATE());";
-                using (SqlCommand command = new SqlCommand(sqlQuery, connection))
+                string sqlQuery = "SELECT * FROM activity WHERE DATE(start_date) = DATE('now', 'localtime');";
+                using (SQLiteCommand command = new SQLiteCommand(sqlQuery, connection))
                 {
-                    using (SqlDataReader reader = command.ExecuteReader())
+                    using (SQLiteDataReader reader = command.ExecuteReader())
                     {
                         while (reader.Read())
                         {

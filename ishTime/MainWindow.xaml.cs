@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -13,7 +14,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
-using System.Windows.Shapes;
+using Microsoft.Data.Sqlite;
+using SQLitePCL;
 
 namespace ishTime
 {
@@ -23,6 +25,7 @@ namespace ishTime
     public partial class MainWindow : Window
     {
         bool isPlay;
+        DateTime startTime;
         private static Mutex _mutex = new Mutex(true, "{ishTime}");
 
         public MainWindow()
@@ -55,11 +58,12 @@ namespace ishTime
 
         private async void StartTimer()
         {
+            startTime =  DateTime.Now;
             Models db = new Models();
             db.StartTimer();
             while (isPlay)
             {
-                TimeSpan currentTime = db.GetActiveTime();
+                TimeSpan currentTime = DateTime.Now - startTime;
                 timeText.Text = currentTime.ToString(@"hh\:mm\:ss");
                 await Task.Delay(1000);
             }
@@ -103,6 +107,12 @@ namespace ishTime
 
         protected void OnStartup()
         {
+            if (Properties.Settings.Default.isFirstRun)
+            {
+                Properties.Settings.Default.isFirstRun = false;
+                Properties.Settings.Default.Save();
+            }
+
             if (!_mutex.WaitOne(TimeSpan.Zero, true))
             {
                 MessageBox.Show("Another instance of the application is already running.");
